@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, Upload, FileText, RefreshCw, AlertCircle } from "lucide-react";
+import { ChevronLeft, Upload, FileText, RefreshCw, AlertCircle, Info } from "lucide-react";
 import * as XLSX from "xlsx";
 import { ImportedData } from "@/pages/Index";
+import { useSubscriptionDays } from "@/hooks/useSubscriptionDays";
 
 interface ImportRomaneioProps {
   onNavigate: (screen: string) => void;
@@ -13,6 +14,8 @@ const ImportRomaneio = ({ onNavigate, onDataImported }: ImportRomaneioProps) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { daysRemaining } = useSubscriptionDays();
+  const hasActivePlan = (daysRemaining ?? 0) > 0;
 
   const parseFile = (file: File) => {
     setLoading(true);
@@ -109,7 +112,15 @@ const ImportRomaneio = ({ onNavigate, onDataImported }: ImportRomaneioProps) => 
         </div>
       )}
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-3">
+        {!hasActivePlan && (
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <Info size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 leading-relaxed">
+              <span className="font-bold">Sem plano ativo:</span> No modo gratuito, apenas 3 endereços serão exibidos no mapa. Ative um plano mensal para visualizar o mapa completo com todos os endereços.
+            </p>
+          </div>
+        )}
         <div className="bg-card rounded-2xl p-4 border border-border">
           <p className="text-xs text-muted-foreground leading-relaxed">
             <span className="font-bold text-foreground">Dica:</span> Certifique-se que sua planilha contém as colunas de endereço e coordenadas para uma otimização precisa.

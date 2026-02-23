@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapPin, CheckCircle2, ChevronRight } from "lucide-react";
+import { MapPin, CheckCircle2, ChevronRight, Lock } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ImportedData } from "@/pages/Index";
+import { useSubscriptionDays } from "@/hooks/useSubscriptionDays";
 
 // Mapbox public token
 mapboxgl.accessToken = "pk.eyJ1IjoicGFpdmEwMDciLCJhIjoiY21pYm4yOHphMDNocTJqb2w5OTlhZWk5bCJ9.nYQcx0AWey8p5P2R1mWJQQ";
+
+const FREE_LIMIT = 3;
 
 interface LocationAdjustmentProps {
   onNavigate: (screen: string) => void;
@@ -20,6 +23,10 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [localData, setLocalData] = useState<ImportedData | null>(importedData);
+  const { daysRemaining, loading: subLoading } = useSubscriptionDays();
+
+  const hasActivePlan = (daysRemaining ?? 0) > 0;
+  const visibleRows = localData ? (hasActivePlan ? localData.rows : localData.rows.slice(0, FREE_LIMIT)) : [];
 
   useEffect(() => {
     if (!mapContainer.current || !localData) return;
@@ -41,7 +48,7 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
     const bounds = new mapboxgl.LngLatBounds();
     let hasValidCoords = false;
 
-    localData.rows.forEach((row, index) => {
+    visibleRows.forEach((row, index) => {
       const lat = parseFloat(String(row["Latitude"] || "").replace(',', '.'));
       const lng = parseFloat(String(row["Longitude"] || "").replace(',', '.'));
 
@@ -78,7 +85,7 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
     if (hasValidCoords) {
       // Collect valid coordinates
       const validCoords: [number, number][] = [];
-      localData.rows.forEach((row) => {
+      visibleRows.forEach((row) => {
         const lat = parseFloat(String(row["Latitude"] || "").replace(',', '.'));
         const lng = parseFloat(String(row["Longitude"] || "").replace(',', '.'));
         if (!isNaN(lat) && !isNaN(lng)) validCoords.push([lng, lat]);
@@ -121,7 +128,7 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
         map.fitBounds(bounds, { padding: 40, duration: 1000, maxZoom: 15 });
       }
     }
-  }, [localData?.totalAddresses]);
+  }, [localData?.totalAddresses, hasActivePlan]);
 
   return (
     <div className="flex flex-col h-full bg-[#F4F6F9]">
@@ -131,10 +138,29 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
         {/* Dica flutuante sobre o mapa */}
         <div className="absolute top-3 left-3 right-3 z-10">
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-sm flex items-center gap-2">
-            <MapPin size={14} className="text-blue-500 shrink-0" />
-            <span className="text-xs text-gray-600 font-medium">Arraste os pins para corrigir as localizações</span>
+            <MapPin size={14} className="text-primary shrink-0" />
+            <span className="text-xs text-muted-foreground font-medium">Arraste os pins para corrigir as localizações</span>
           </div>
         </div>
+
+        {/* Banner de limite para usuários sem plano */}
+        {!hasActivePlan && localData && localData.totalAddresses > FREE_LIMIT && (
+          <div className="absolute bottom-3 left-3 right-3 z-10">
+            <div className="bg-amber-500/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+              <Lock size={16} className="text-white shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-white font-bold">Modo gratuito: apenas {FREE_LIMIT} de {localData.totalAddresses} endereços visíveis</p>
+                <p className="text-[10px] text-white/80">Ative um plano mensal para ver todos os endereços</p>
+              </div>
+              <button 
+                onClick={() => onNavigate("subscription")}
+                className="bg-white text-amber-600 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0"
+              >
+                Ver planos
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Rodapé compacto */}
