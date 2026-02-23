@@ -48,7 +48,10 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
       if (!isNaN(lat) && !isNaN(lng)) {
         hasValidCoords = true;
         const el = document.createElement("div");
-        el.innerHTML = `<div style="width:24px;height:24px;background:#3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:grab;"><div style="width:6px;height:6px;background:white;border-radius:50%;"></div></div>`;
+        el.innerHTML = `<svg width="30" height="42" viewBox="0 0 30 42" style="cursor:grab;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+          <path d="M15 0C6.716 0 0 6.716 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.716 23.284 0 15 0z" fill="#3b82f6"/>
+          <circle cx="15" cy="14" r="6" fill="white"/>
+        </svg>`;
 
         const marker = new mapboxgl.Marker({ element: el, draggable: true })
           .setLngLat([lng, lat])
