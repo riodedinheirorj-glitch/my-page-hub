@@ -112,10 +112,10 @@ const LocationAdjustment = ({ onNavigate, importedData, onUpdateData }: Location
           }
         });
 
-        map.fitBounds(clusterBounds, { padding: 60, duration: 1000, maxZoom: 16 });
+        map.fitBounds(clusterBounds, { padding: 60, duration: 1000, maxZoom: 18 });
       } else {
         // All close together — zoom in to street level
-        map.fitBounds(bounds, { padding: 40, duration: 1000, maxZoom: 16 });
+        map.fitBounds(bounds, { padding: 40, duration: 1000, maxZoom: 18 });
       }
     }
   }, [localData?.totalAddresses]);
